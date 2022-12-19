@@ -1,0 +1,474 @@
+# Сравнительная статистика
+
+При сборе статистики анализируются только те фрагменты звонка — реплики, — в которых есть распознанная речь. Статистика по эмоциям собирается только по тем репликам, которые длиннее двух секунд или в которых больше двух слов.
+
+Показатель `emo_score` – это разница между вероятностью позитива и негатива. Принимает значения от -1 до 1, где -1 — это уверенный негатив, а 1 — это уверенный позитив.
+
+* Во всех показателях, где есть `emo_score_weighted_by` или `emotion_weighted_by`, средний `emo_score` или средняя эмоция считаются с учетом веса данной реплики относительно всего канала. Вес может считаться по количеству слов или по длительности речи. Например, если в звонке 2 реплики: в первой 9 слов и эмоция — нейтраль (0), а во второй 1 слово и эмоция — позитив (1), то вес первой — 0,9, а второй — 0,1. Средняя эмоция, взвешенная по количеству слов, считается так: `0*0,9 + 1*0,1 = 0,1`.
+
+
+|**Идентификатор показателя**|**Описание показателя**|**Единица измерения**|
+|----|-----|-----|
+| `call_duration`| Длительность звонка| Секунды   |
+
+
+## Общие статистики речи и баланса
+
+|**Идентификатор показателя**|**Описание показателя**|**Единица измерения**|
+|----|-----|-----|
+| `dialog_both_channels_speech_length_sum`|Суммарная длительность речи в двух каналах (`customer_speech_length_sum` + `agent_speech_length_sum`)| Секунды|
+| `dialog_customer_speech_length_percentage`| Доля речи в канале клиента (`customer_speech_length_sum` / `call_duration`)| Проценты — от 0 до 1|
+| `dialog_agent_speech_length_percentage`| Доля речи в канале оператора (`agent_speech_length_sum` / `call_duration`)| Проценты — от 0 до 1|
+| `dialog_anybody_speech_length_sum`| Суммарное время, когда говорит кто-нибудь|	Секунды|
+| `dialog_anybody_speech_length_percentage`| Доля любой речи в звонке (`dialog_anybody_speech_length_sum` / `call_duration`) |	Проценты — от 0 до 1|
+| `dialog_silence_length_sum`| Суммарное время тишины в звонке|	Секунды|
+| `dialog_silence_length_percentage`| Доля тишины в звонке (`dialog_silence_length_sum` / `call_duration`)|	Проценты — от 0 до 1|
+| `dialog_customer_speech_percentage`| Доля речи клиента в диалоге (`customer_speech_length_sum` / `dialog_both_channels_speech_length_sum`). <br />Сумма `dialog_customer_speech_percentage` и `dialog_agent_speech_percentage` всегда равна 1 | Проценты — от 0 до 1|
+| `dialog_agent_speech_percentage`| Доля речи оператора в диалоге (`agent_speech_length_sum` / `dialog_both_channels_speech_length_sum`).<br />Сумма `dialog_customer_speech_percentage` и `dialog_agent_speech_percentage` всегда равна 1 |Проценты — от 0 до 1|
+
+## Статистики перебиваний
+
+Перебивание — часть диалога, в которой клиент и оператор активно перебивают друг друга, то есть есть несколько фрагментов одновременной речи. Одиночный короткий фрагмент одновременной речи не считается перебиванием
+
+|**Идентификатор показателя**|**Описание показателя**|**Единица измерения**|
+|----|-----|-----|
+| `dialog_interruptions_count`| Количество перебиваний в диалоге| Штуки   |
+| `dialog_interruptions_speech_length_sum`| Суммарная длительность одновременной речи внутри всех перебиваний| Секунды |
+| `dialog_interruptions_speech_length_percentage`| Доля одновременной речи при перебиваниях в звонке целиком (`dialog_interruptions_speech_length_sum` / `call_duration`) |Проценты — от 0 до 1|
+| `dialog_interruptions_raw_speech_length_sum`| Суммарная длительность одновременной речи| Секунды |
+| `dialog_interruptions_raw_speech_length_percentage`|Доля одновременной речи в звонке целиком (`dialog_interruptions_raw_speech_length_sum` / `call_duration`)|Проценты — от 0 до 1|
+| `dialog_interruptions_in_anybody_speech_percentage`| Доля одновременной речи при перебивании во время того, когда кто-нибудь говорит (`dialog_interruptions_speech_length_sum` / `dialog_anybody_speech_length_sum`)| Проценты — от 0 до 1|
+| `dialog_interruptions_in_customer_speech_percentage`| Доля одновременной речи при перебивании в речи клиента (`dialog_interruptions_speech_length_sum` / `customer_speech_length_sum`)| Проценты — от 0 до 1|
+| `dialog_interruptions_in_agent_speech_percentage`| Доля одновременной речи при перебивании в речи оператора (`dialog_interruptions_speech_length_sum` / `agent_speech_length_sum`)| Проценты — от 0 до 1|
+| `dialog_interruptions_list`| Составной параметр, включающий описание каждого интервала перебивания| -       |
+
+### Состав dialog_interruptions_list
+
+|**Идентификатор показателя**|**Описание показателя**|**Единица измерения**|
+|----|-----|-----|
+| `interruption_speech_length_sum`| Суммарная длительность одновременной речи| Секунды|
+| `interruption_total_length`| Длительность фрагмента с перебиванием| Секунды|
+| `interruption_speech_percentage`| Доля одновременной речи в перебивании (`interruption_speech_length_sum` / `interruption_total_length`)   | Проценты — от 0 до 1 |
+| `interruption_count`| Количество одновременных реплик| Штуки|
+| `interruption_start_frame`| Первый фрейм фрагмента перебивания| Фрейм|
+| `interruption_end_frame`| Последний фрейм фрагмента перебивания| Фрейм|
+| `interruption_start_sec`| Первая секунда фрагмента перебивания| Секунды|
+| `interruption_end_sec`| Последняя секунда фрагмента перебивания| Секунды|
+| `customer_speech_length_sum`| Суммарная длительность речи клиента в перебивании| Секунды|
+| `customer_interruption_speech_percentage` | Доля одновременной речи в речи клиента (`interruption_speech_length_sum` / `customer_speech_length_sum`) | Проценты — от 0 до 1 |
+| `agent_speech_length_sum`| Суммарная длительность речи оператора в перебивании| Секунды|
+| `agent_interruption_speech_percentage`    | Доля одновременной речи в речи оператора (`interruption_speech_length_sum` / `agent_speech_length_sum`)| Проценты — от 0 до 1 |
+| `customer_speech_percentage`| Доля реплик клиента в речи (`customer_speech_percentage` + `agent_speech_percentage` = 1)| Проценты — от 0 до 1 |
+| `agent_speech_percentage`| Доля реплик оператора в речи (`customer_speech_percentage` + `agent_speech_percentage` = 1)| Проценты — от 0 до 1 |
+| `silence_length_sum`| Суммарное время, когда никто не говорит| Секунды|
+| `silence_length_percentage`| Доля тишины в интервале (`silence_length_sum` / `interruption_total_length`)| Проценты — от 0 до 1 |
+
+
+## Показатели разницы в скорости речи
+
+### Разница в скоростях по одному каналу
+
+|**Идентификатор показателя**|**Описание показателя**|**Единица измерения**|
+|----|-----|-----|
+| `dialog_customer_agent_n_words_mean_diff`| Разница в среднем количестве слов в реплике клиента и оператора (`customer_n_words_mean` – `agent_n_words_mean`)| Штуки    |
+| `dialog_customer_agent_utt_length_mean_diff`| Разница в длительности реплик клиента и оператора в звонке (`customer_utt_length_mean` – `agent_utt_length_mean`)| Секунды  |
+| `dialog_customer_agent_speech_length_mean_diff`| Разница в средней длительности речи реплик клиента и оператора в звонке (`customer_speech_length_mean` – `agent_speech_length_mean`)| Секунды  |
+| `dialog_customer_agent_letters_in_word_mean_diff`| Разница в среднем количестве букв в слове в речи клиента и оператора в звонке (`customer_letters_in_word_mean` – `agent_letters_in_word_mean`)| Штуки    |
+| `dialog_customer_agent_speech_speed_letters_mean_diff`| Разница в средней по репликам скорость речи клиента и оператора (`customer_speech_speed_letters_mean` – `agent_speech_speed_letters_mean`)| Букв/сек |
+| `dialog_customer_agent_speech_speed_words_mean_diff`| Разница в средней по репликам скорость речи клиента и оператора (`customer_speech_speed_words_mean` – `agent_speech_speed_words_mean`)| Слов/сек |
+| `dialog_customer_agent_speech_speed_letters_all_call_mean_diff` | Разница в средней скорости речи клиента и оператора по всему звонку (`customer_speech_speed_letters_all_call_mean` – `agent_speech_speed_letters_all_call_mean`) | Букв/сек |
+|`dialog_customer_agent_speech_speed_words_all_call_mean_diff`|Разница в средней скорости речи клиента и оператора по всему звонку (`customer_speech_speed_words_all_call_mean` – `agent_speech_speed_words_all_call_mean`) | Слов/сек |
+
+
+### Разница в скоростях по двум каналам
+
+Разница в скоростях, посчитанных по двум каналам. Эти показатели нужны для того, чтобы понять как оператор и клиент подстраиваются под скорость речи друг друга. Так как клиент и оператор редко говорят одновременно, в каждом канале мы усредняем скорость речи между длинными репликами, расположенными рядом друг с другом. Возможны отличия в аналогичных показателях в каналах оператора и клиента
+
+<br />
+
+**Показатели разницы в скоростях — насколько клиент говорит быстрее оператора**
+
+Все показатели этого раздела посчитаны по длинным репликам, расположенным рядом друг с другом в канале клиента
+
+|**Идентификатор показателя**|**Описание показателя**|**Единица измерения**|
+|----|-----|-----|
+| `dialog_customer_speech_speed_delta_utt_count`| Количество длинных реплик, расположенных рядом друг с другом в канале клиента|Штуки|
+| `dialog_customer_speech_speed_delta_speech_length_sum`| Суммарная длительность длинных реплик, расположенных рядом друг с другом в канале клиента|	Секунды|
+| `dialog_customer_speech_speed_delta_n_words_sum`| Суммарное количество слов в длинных реплик, расположенных рядом друг с другом в канале клиента |	Слова|
+| `dialog_customer_speech_speed_delta_letters_mean`|Средняя разница скорости речи.<br /> Если оператор быстрее клиента, то разница скорости будет отрицательная|Букв/сек|
+| `dialog_customer_speech_speed_delta_letters_abs_mean`|Среднее модуля разницы скорости| Букв/сек|
+| `dialog_customer_speech_speed_delta_letters_max`| Максимальная разница скорости речи.<br />Если оператор быстрее клиента, то разница скорости будет отрицательная| Букв/сек |
+| `dialog_customer_speech_speed_delta_letters_min`|Минимальная разница скорости речи.<br />Если оператор быстрее клиента, то разница скорости будет отрицательная| Букв/сек|
+| `dialog_customer_speech_speed_delta_letters_std`| Среднеквадратическое отклонение разницы скорости речи| Букв/сек|
+| `dialog_customer_speech_speed_delta_letters_true_mean`| Средняя разница скорости речи, взвешенная по длительности речи в репликах.<br /> Если оператор быстрее клиента, то разница скорости будет отрицательная| Букв/сек|
+| `dialog_customer_speech_speed_delta_letters_true_abs_mean`|Среднее модуля разницы скорости речи, взвешенное по длительности речи в репликах| Букв/сек|
+| `dialog_customer_speech_speed_delta_letters_true_std`| Среднеквадратическое отклонение разницы скорости речи, взвешенное по длительности речи в репликах |Букв/сек|
+| `dialog_customer_speech_speed_delta_words_mean`|Средняя разница скорости речи.<br /> Если оператор быстрее клиента, то разница скорости будет отрицательная| Слов/сек |
+| `dialog_customer_speech_speed_delta_words_abs_mean`|Среднее модуля разницы скорости речи| Слов/сек|
+| `dialog_customer_speech_speed_delta_words_max`|Максимальная разница скорости речи.<br /> Если оператор быстрее клиента, то разница скорости будет отрицательная|Слов/сек |
+| `dialog_customer_speech_speed_delta_words_min`| Минимальная разница скорости речи.<br />Если оператор быстрее клиента, то разница скорости будет отрицательная|Слов/сек|
+| `dialog_customer_speech_speed_delta_words_std`|Среднеквадратическое отклонение разницы скорости речи|  Слов/сек|
+| `dialog_customer_speech_speed_delta_words_true_mean`|Средняя разница скорости речи, взвешенная по длительности речи в репликах.<br /> Если оператор быстрее клиента, то разница скорости будет отрицательная| Слов/сек|
+| `dialog_customer_speech_speed_delta_words_true_abs_mean`|Среднее модуля разницы скорости речи, взвешенное по длительности речи в репликах|Слов/сек|
+| `dialog_customer_speech_speed_delta_words_true_std`| Среднеквадратическое отклонение разницы скорости речи, взвешенное по длительности речи в репликах | Слов/сек|
+
+**Показатели разницы в скоростях — насколько оператор говорит быстрее клиента**
+
+Все показатели этого раздела посчитаны по длинным репликам, расположенным рядом друг с другом в канале оператора
+
+|**Идентификатор показателя**|**Описание показателя**|**Единица измерения**|
+|----|-----|-----|
+| `dialog_agent_speech_speed_delta_utt_count`|Количество длинных реплик, расположенных рядом друг с другом в канале оператора|Штуки |
+| `dialog_agent_speech_speed_delta_speech_length_sum`| Суммарная длительность длинных реплик, расположенных рядом друг с другом в канале оператора|	Секунды
+| `dialog_agent_speech_speed_delta_n_words_sum`| Суммарное количество слов в длинных реплик, расположенных рядом друг с другом в канале оператора |	Слова|
+| `dialog_agent_speech_speed_delta_letters_mean`|Средняя разница скорости речи. <br /> Если клиент быстрее оператора, то разница скорости будет отрицательная|Букв/сек |
+| `dialog_agent_speech_speed_delta_letters_abs_mean`|Среднее модуля разницы скорости речи| Букв/сек|
+| `dialog_agent_speech_speed_delta_letters_max`|Максимальная разница скорости речи.<br /> Если клиент быстрее оператора, то разница скорости будет отрицательная| Букв/сек|
+| `dialog_agent_speech_speed_delta_letters_min`| Минимальная разница скорости речи.<br /> Если клиент быстрее оператора, то разница скорости будет отрицательная| Букв/сек |
+| `dialog_agent_speech_speed_delta_letters_std`|Среднеквадратическое отклонение разницы скорости речи |Букв/сек|
+| `dialog_agent_speech_speed_delta_letters_true_mean`|Средняя разница скорости речи, взвешенная по длительности речи в репликах.<br />Если клиент быстрее оператора, то разница скорости будет отрицательная| Букв/сек|
+| `dialog_agent_speech_speed_delta_letters_true_abs_mean`|Среднее модуля разницы скорости речи, взвешенное по длительности речи в репликах |Букв/сек |
+| `dialog_agent_speech_speed_delta_letters_true_std`|Среднеквадратическое отклонение разницы скорости речи, взвешенное по длительности речи в репликах |Букв/сек |
+| `dialog_agent_speech_speed_delta_words_mean`| Средняя разница скорости речи.<br /> Если клиент быстрее оператора, то разница скорости будет отрицательная |Слов/сек |
+| `dialog_agent_speech_speed_delta_words_abs_mean`|Среднее модуля разницы скорости речи|Слов/сек|
+| `dialog_agent_speech_speed_delta_words_max`| Максимальная разница скорости речи |Слов/сек|
+| `dialog_agent_speech_speed_delta_words_min`| Минимальная разница скорости речи| Слов/сек  |
+| `dialog_agent_speech_speed_delta_words_std`| Среднеквадратическое отклонение разницы скорости речи|Слов/сек |
+| `dialog_agent_speech_speed_delta_words_true_mean`|Средняя разница скорости речи, взвешенная по длительности речи в репликах.<br /> Если клиент быстрее оператора, то разница скорости будет отрицательная|Слов/сек|
+| `dialog_agent_speech_speed_delta_words_true_abs_mean`|Среднее модуля разницы скорости речи, взвешенное по длительности речи в репликах|Слов/сек|
+| `dialog_agent_speech_speed_delta_words_true_std`| Среднеквадратическое отклонение разницы скорости речи, взвешенное по длительности речи в репликах | Слов/сек|
+
+
+## Статистики для одного канала
+
+### Статистики для канала клиента
+
+|**Идентификатор показателя**|**Описание показателя**|**Единица измерения**|
+|----|-----|-----|
+| `customer_utt_count`| Количество реплик в канале клиента| Штуки|
+| `customer_utt_length_sum`| Суммарная длительность реплик в канале клиента| Секунды|
+| `customer_speech_length_sum`| Суммарная длительность речи в канале клиента| Секунды|
+| `customer_n_words_sum`| Суммарное количество распознанных слов в канале клиента| Штуки|
+| `customer_emotion_utt_count`| Количество реплик в канале клиента| Штуки|
+| `customer_emotion_utt_length_sum`| Суммарная длительность реплик в канале клиента| Секунды|
+| `customer_emotion_speech_length_sum`| Суммарная длительность речи в канале клиента| Секунды|
+| `customer_emotion_n_words_sum`| Суммарное количество распознанных слов в канале клиента| Штуки|
+| `customer_n_words_mean`| Среднее количество слов в репликах в канале клиента| Штуки|
+| `customer_utt_length_mean`| Средняя длительность реплик в канале клиента| Секунды|
+| `customer_speech_length_mean`| Средняя длительность речи реплик в канале клиента| Секунды|
+| `customer_letters_in_word_mean`| Среднее количество букв в слове по всему каналу клиента| Штуки|
+| `customer_speech_speed_letters_mean`| Средняя по репликам скорость речи — количество букв в секунду в канале клиента| Букв/сек|
+| `customer_speech_speed_letters_std`| Среднеквадратическое отклонение скорости речи по репликам — количество букв в секунду в канале клиента| Букв/сек|
+| `customer_speech_speed_words_mean`| Средняя по репликам скорость речи — количество слов в секунду в канале клиента| Слов/сек|
+| `customer_speech_speed_words_std`| Среднеквадратическое отклонение скорости речи по репликам — количество слов в секунду в канале клиента| Слов/сек|
+| `customer_speech_speed_letters_all_call_mean`| Средняя скорость по всему каналу клиента (сумма букв во всех репликах / суммарная длительность речи (`speech_length_sum`))| Букв/сек|
+| `customer_speech_speed_words_all_call_mean`| Средняя скорость по всему каналу клиента (`n_words_sum` / `speech_length_sum`)| Слов/сек |
+| `customer_speech_length_percentage`| Доля речи в канале клиента (`speech_length_sum` / `call_duration`)| Проценты — от 0 до 1|
+| `customer_emotion_neg_utt_count`| Количество реплик с предсказанной негативной эмоцией в канале клиента| Штуки|
+| `customer_emotion_neg_utt_percentage`| Доля негативных реплик среди всех эмоциональных реплик в канале клиента| Проценты — от 0 до 1 |
+| `customer_emotion_neg_speech_time`| Суммарная длительность речи в негативных репликах в канале клиента| Секунды|
+| `customer_emotion_neg_speech_time_percentage`| Доля негативной речи в эмоциональных репликах в канале клиента (`emotion_neg_speech_time` / `emotion_utt_length_sum`)| Проценты — от 0 до 1|
+| `customer_emotion_neg_speech_time_weighted_by_confidence`| Длительность речи в негативных репликах, взвешенная по вероятности негатива, в канале клиента (сумма данных по всем негативным репликам: длительность речи в реплике * вероятность негатива)| Секунды |
+| `customer_emotion_neu_utt_count`| Количество реплик с предсказанной нейтральной эмоцией в канале клиента| Штуки|
+| `customer_emotion_neu_utt_percentage`| Доля нейтральных реплик среди всех эмоциональных реплик в канале клиента| Проценты — от 0 до 1 |
+| `customer_emotion_neu_speech_time`| Суммарная длительность речи в нейтральных реплик в канале клиента| Секунды|
+| `customer_emotion_neu_speech_time_percentage`| Доля нейтральной речи в эмоциональных репликах в канале клиента (`emotion_neu_speech_time` / `emotion_utt_length_sum`)| Проценты — от 0 до 1 |
+| `customer_emotion_neu_speech_time_weighted_by_confidence`| Длительность речи в нейтральных репликах, взвешенная по вероятности нейтрали, в канале клиента (сумма данных по всем нейтральным репликам: длительность речи в реплике * вероятность нейтрали)| Секунды |
+| `customer_emotion_pos_utt_count`| Количество реплик с предсказанной позитивной эмоцией в канале клиента| Штуки|
+| `customer_emotion_pos_utt_percentage`| Доля позитивных реплик среди всех эмоциональных реплик в канале клиента| Проценты — от 0 до 1 |
+| `customer_emotion_pos_speech_time`| Суммарная длительность речи в позитивных репликах в канале клиента| Секунды|
+| `customer_emotion_pos_speech_time_percentage`| Доля позитивной речи в эмоциональных репликах в канале клиента (`emotion_pos_speech_time` / `emotion_utt_length_sum`)| Проценты — от 0 до 1 |
+| `customer_emotion_pos_speech_time_weighted_by_confidence`| Длительность речи в позитивных репликах, взвешенная по вероятности позитива, в канале клиента (сумма данных по всем позитивным репликам: длительность речи в реплике * вероятность позитива)| Секунды|
+| `customer_emotion_mean`| Средняя предсказанная эмоция по всем эмоциональным репликам в канале клиента|Число от -1 до 1, где:<br />• –1 — все реплики негативные;<br />• 1 — все реплики позитивные |
+| `customer_emo_score_mean`| Средний `emo_score` по всем эмоциональным репликам в канале клиента|Число от -1 до 1, где:<br />• –1 — 100% негатив;<br />• 1 — 100% позитив |
+| `customer_emo_neg_mean`| Средняя предсказанная вероятность негатива по всем эмоциональным репликам в канале клиента|Проценты — от 0 до 1|
+| `customer_emo_neu_mean`| Средняя предсказанная вероятность нейтральной эмоции по всем эмоциональным репликам в канале клиента|Проценты — от 0 до 1 |
+| `customer_emo_pos_mean`| Средняя предсказанная вероятность позитива по всем эмоциональным репликам в канале клиента|Проценты — от 0 до 1 |
+| `customer_emotion_weighted_by_speech_length_mean`| Средняя предсказанная эмоция, взвешенная по длительности речи в репликах, в канале клиента*|Варианты:<br />• –1 — негативная;<br />• 0 — нейтральная;<br />• 1 — позитивная|
+| `customer_emo_score_weighted_by_speech_length_mean`| Средний `emo_score`, взвешенный по длительности речи в репликах, в канале клиента*|Варианты:<br />• –1 — негативная;<br />• 0 — нейтральная;<br />• 1 — позитивная|
+| `customer_emotion_weighted_by_n_words_mean`| Средняя вероятность эмоции, взвешенная по длительности речи в репликах, в канале клиента*|Число от -1 до 1, где:<br />• –1 — 100% негатив;<br />• 1 — 100% позитив|
+| `customer_emo_score_weighted_by_n_words_mean`| Средний `emo_score`, взвешенный по количеству слов в репликах, в канале клиента*|Число от -1 до 1, где:<br />• –1 — 100% негатив;<br />• 1 — 100% позитив|
+| `customer_speech_start_frame`| Фрейм начала речи в канале клиента. Фрейм — 1/8000 секунды| Фрейм|
+| `customer_conv_start_last_frame`| Последний фрейм начала диалога в канале клиента| Фрейм|
+| `customer_conv_start_last_sec`| Время окончания начала диалога в канале клиента (`conv_start_conv_start_last_frame` / `sample_rate`)| Секунды|
+| `customer_conv_start_emotion_utt_count`| Количество реплик в начале диалога в канале клиента| Штуки|
+| `customer_conv_start_emotion_utt_length_sum`| Суммарная длительность реплик в начале диалога в канале клиента| Секунды|
+| `customer_conv_start_emotion_speech_length_sum`| Суммарная длительность начала диалога в канале клиента| Секунды|
+| `customer_conv_start_emotion_n_words_sum`| Суммарное количество распознанных слов в начале диалога в канале клиента| Штуки|
+| `customer_conv_start_emotion_neg_utt_count`| Количество реплик с предсказанной негативной эмоцией в начале диалога в канале клиента| Штуки|
+| `customer_conv_start_emotion_neg_utt_percentage`| Доля негативных реплик среди всех эмоциональных реплик в начале диалога в канале клиента| Проценты — от 0 до 1 |
+| `customer_conv_start_emotion_neg_speech_time`| Суммарная длительность речи в негативных репликах в начале диалога в канале клиента| Секунды|
+| `customer_conv_start_emotion_neg_speech_time_percentage`| Доля негативной речи среди речи в эмоциональных репликах в начале диалога в канале клиента (`conv_start_emotion_neg_speech_time` / `conv_start_emotion_utt_length_sum`)| Проценты — от 0 до 1|
+| `customer_conv_start_emotion_neg_speech_time_weighted_by_confidence`| Длительность речи в негативных репликах в начале диалога, взвешенная по вероятности негатива, в канале клиента (сумма данных по негативным репликам в начале диалога: длительность речи в реплике * вероятность негатива)|Секунды|
+| `customer_conv_start_emotion_neu_utt_count`| Количество реплик с предсказанной нейтральной эмоцией в начале диалога в канале клиента| Штуки|
+| `customer_conv_start_emotion_neu_utt_percentage`| Доля нейтральных реплик среди всех эмоциональных реплик в начале диалога в канале клиента| Проценты — от 0 до 1 |
+| `customer_conv_start_emotion_neu_speech_time`| Суммарная длительность речи в нейтральных репликах в начале диалога в канале клиента| Секунды|
+| `customer_conv_start_emotion_neu_speech_time_percentage`| Доля нейтральной речи среди речи в эмоциональных репликах в начале диалога в канале клиента (`conv_start_emotion_neu_speech_time` / `conv_start_emotion_utt_length_sum`)| Проценты — от 0 до 1 |
+| `customer_conv_start_emotion_neu_speech_time_weighted_by_confidence`| Длительность речи в нейтральных репликах в начале диалога, взвешенная по вероятности нейтрали, в канале клиента (сумма данных по нейтральным репликам в начале диалога: длительность речи в реплике * вероятность нейтрали)| Секунды |
+| `customer_conv_start_emotion_pos_utt_count`| Количество реплик с предсказанной позитивной эмоцией в начале диалога в канале клиента| Штуки|
+| `customer_conv_start_emotion_pos_utt_percentage`| Доля позитивных реплик среди всех эмоциональных реплик в начале диалога в канале клиента| Проценты — от 0 до 1 |
+| `customer_conv_start_emotion_pos_speech_time`| Суммарная длительность речи в позитивных репликах в начале диалога в канале клиента| Секунды|
+| `customer_conv_start_emotion_pos_speech_time_percentage`| Доля позитивной речи среди речи в эмоциональных репликах в начале диалога в канале клиента (`conv_start_emotion_pos_speech_time` / `conv_start_emotion_utt_length_sum`)| Проценты — от 0 до 1 |
+| `customer_conv_start_emotion_pos_speech_time_weighted_by_confidence`| Длительность речи в позитивных репликах в начале диалога, взвешенная по вероятности позитива, в канале клиента (сумма данных по позитивным репликам в начале диалога: длительность речи в реплике * вероятность позитива)|  Секунды|
+| `customer_conv_start_emotion_mean`| Средняя предсказанная эмоция по всем эмоциональным репликам в начале диалога в канале клиента| Число от -1 до 1, где:<br />• –1 — все реплики негативные;<br />• 1 — все реплики позитивные |
+| `customer_conv_start_emo_score_mean`| Средний `emo_score` по всем эмоциональным репликам в начале диалога в канале клиента|Число от -1 до 1, где:<br />• –1 — 100% негатив;<br />• 1 — 100% позитив|
+| `customer_conv_start_emo_neg_mean`| Средняя предсказанная вероятность негатива по всем эмоциональным репликам в начале диалога в канале клиента| Проценты — от 0 до 1 |
+| `customer_conv_start_emo_neu_mean`| Средняя предсказанная вероятность нейтральной эмоции по всем эмоциональным репликам в начале диалога в канале клиента| Проценты — от 0 до 1 |
+| `customer_conv_start_emo_pos_mean`| Средняя предсказанная вероятность позитива по всем эмоциональным репликам в начале диалога в канале клиента| Проценты — от 0 до 1 |
+| `customer_conv_start_emotion_weighted_by_speech_length_mean`| Средняя предсказанная эмоция, взвешенная по длительности речи в репликах, в начале диалога в канале клиента*|Варианты:<br />• –1 — негативная;<br />• 0 — нейтральная;<br />• 1 — позитивная |
+| `customer_conv_start_emo_score_weighted_by_speech_length_mean`| Средний `emo_score`, взвешенный по длительности речи в репликах, в начале диалога в канале клиента*|Варианты:<br />• –1 — негативная;<br />• 0 — нейтральная;<br />• 1 — позитивная |
+| `customer_conv_start_emotion_weighted_by_n_words_mean`| Средняя вероятность эмоции, взвешенная по количеству слов в репликах, в начале диалога в канале клиента*|Число от -1 до 1, где:<br />• –1 — 100% негатив;<br />• 1 — 100% позитив|
+| `customer_conv_start_emo_score_weighted_by_n_words_mean`| Средний `emo_score`, взвешенный по количеству слов в репликах, в начале диалога в канале клиента*|Число от -1 до 1, где:<br />• –1 — 100% негатив;<br />• 1 — 100% позитив|
+| `customer_conv_start_emotion_neg_utt_count_of_total_call_percentage`| Соотношение количества реплик с предсказанной негативной эмоцией в начале диалога и по всему каналу клиента (`conv_start_emotion_neg_utt_count` / `emotion_neg_utt_count`)| Проценты — от 0 до 1 |
+| `customer_conv_start_emotion_neu_utt_count_of_total_call_percentage`| Соотношение количества реплик с предсказанной нейтральной эмоцией в начале диалога и по всему каналу клиента (`conv_start_emotion_neu_utt_count` / `emotion_neu_utt_count`)| Проценты — от 0 до 1 |
+| `customer_conv_start_emotion_pos_utt_count_of_total_call_percentage`| Соотношение количества реплик с предсказанной позитивной эмоцией в начале диалога и по всему каналу клиента (`conv_start_emotion_pos_utt_count` / `emotion_pos_utt_count`)| Проценты — от 0 до 1 |
+| `customer_conv_start_emotion_neg_speech_time_of_total_call_percentage`| Соотношение длительности речи в негативных репликах в начале диалога и по всему каналу клиента (`conv_start_emotion_neg_speech_time` / `emotion_pos_speech_time`)| Проценты — от 0 до 1 |
+| `customer_conv_start_emotion_neu_speech_time_of_total_call_percentage`| Соотношение длительности речи в нейтральных репликах в начале диалога и по всему каналу клиента (`conv_start_emotion_neo_speech_time` / `emotion_pos_speech_time`)| Проценты — от 0 до 1 |
+| `customer_conv_start_emotion_pos_speech_time_of_total_call_percentage`| Соотношение длительности речи в позитивных репликах в начале диалога и по всему каналу клиента (`conv_start_emotion_pos_speech_time` / `emotion_pos_speech_time`)| Проценты — от 0 до 1 |
+| `customer_conv_start_emotion_neg_speech_time_weighted_by_confidence_of_total_call_percentage`| Соотношение длительности речи в негативных репликах, взвешенная по вероятности негатива, в начале диалога и по всему каналу клиента (`conv_start_emotion_neg_speech_time_weighted_by_confidence` / `emotion_neg_speech_time_weighted_by_confidence`)  | Проценты — от 0 до 1 |
+| `customer_conv_start_emotion_neu_speech_time_weighted_by_confidence_of_total_call_percentage`| Соотношение длительности речи в нейтральных репликах, взвешенная по вероятности нейтрали, в начале диалога и по всему каналу клиента (`conv_start_emotion_neu_speech_time_weighted_by_confidence` / `emotion_neu_speech_time_weighted_by_confidence`) | Проценты — от 0 до 1 |
+| `customer_conv_start_emotion_pos_speech_time_weighted_by_confidence_of_total_call_percentage`| Соотношение длительности речи в позитивных репликах, взвешенная по вероятности позитива, в начале диалога и по всему каналу клиента (`conv_start_emotion_pos_speech_time_weighted_by_confidence` / `emotion_pos_speech_time_weighted_by_confidence`)  | Проценты — от 0 до 1 |
+| `customer_conv_start_emotion_utt_count_of_total_call_percentage`| Соотношение количества реплик в начале диалога и по всему каналу клиента (`conv_start_emotion_utt_count` / `emotion_utt_count`)| Проценты — от 0 до 1 |
+| `customer_conv_start_emotion_speech_length_sum_of_total_call_percentage`| Соотношение суммарной длительности речи в начале диалога и по всему каналу клиента (`conv_start_emotion_speech_length_sum`/ `emotion_speech_length_sum`)| Проценты — от 0 до 1 |
+| `customer_conv_start_emotion_utt_length_sum_of_total_call_percentage`| Соотношение суммарной длительности реплик в начале диалога и по всему каналу клиента (`conv_start_emotion_utt_length_sum`/ `emotion_utt_length_sum`)| Проценты — от 0 до 1 |
+| `customer_conv_start_delta_emo_score_mean`| Разница между средним `emo_score` по всем эмоциональным репликам в начале диалога и по всему каналу клиента (`conv_start_emo_score_mean` - emo_score_mean)|Число от -2 до 2, где:<br />• –2 — 100% негатив;<br />• 2 — 100% позитив |
+| `customer_conv_start_delta_emotion_mean`| Разница между средней предсказанной эмоцией по всем эмоциональным репликам в начале диалога и по всему каналу клиента (conv_start_emotion_mean - emotion_mean)|Число от -2 до 2, где:<br />• –2 — 100% негатив;<br />• 2 — 100% позитив|
+| `customer_conv_start_delta_emotion_weighted_by_speech_length_mean`| Разница между средней предсказанной эмоцией, взвешенной по длительности речи в репликах, в начале диалога и по всему каналу клиента* (`conv_start_emotion_weighted_by_speech_length_mean` - `emotion_weighted_by_speech_length_mean`)| Число от -2 до 2, где:<br />• –2 — 100% негатив;<br />• 2 — 100% позитив|
+| `customer_conv_start_delta_emo_score_weighted_by_speech_length_mean`| Разница между средним `emo_score`, взвешенным по длительности речи в репликах, в начале диалога и по всему каналу клиента* (`conv_start_emo_score_weighted_by_speech_length_mean` - `emo_score_weighted_by_speech_length_mean`)| Число от -2 до 2, где:<br />• –2 — 100% негатив;<br />• 2 — 100% позитив|
+| `customer_conv_start_delta_emotion_weighted_by_n_words_mean`| Разница между средней предсказанной эмоцией, взвешенной по количеству слов в репликах, в начале диалога и по всему каналу клиента* (`conv_start_emotion_weighted_by_n_words_mean` - `emotion_weighted_by_n_words_mean`)|Число от -2 до 2, где:<br />• –2 — 100% негатив;<br />• 2 — 100% позитив|
+| `customer_conv_start_delta_emo_score_weighted_by_n_words_mean`| Разница между средним `emo_score`, взвешенным по количеству слов в репликах, в начале диалога и по всему каналу клиента* (`conv_start_emo_score_weighted_by_n_words_mean` - `emo_score_weighted_by_n_words_mean`)| Число от -2 до 2, где:<br />• –2 — 100% негатив;<br />• 2 — 100% позитив |
+| `customer_conv_start_delta_emotion_neg_speech_time_percentage`| Разница между долей речи в негативных репликах среди речи в эмоциональных репликах в начале диалога и по всему каналу клиента (`conv_start_emotion_neg_speech_time_percentage` - `emotion_neg_speech_time_percentage`)| Проценты — от 0 до 1 |
+| `customer_conv_start_delta_emotion_neu_speech_time_percentage`| Разница между долей речи в нейтральных репликах среди речи в эмоциональных репликах в начале диалога и по всему каналу клиента (`conv_start_emotion_neu_speech_time_percentage` - `emotion_neu_speech_time_percentage`)| Проценты — от 0 до 1 |
+| `customer_conv_start_delta_emotion_pos_speech_time_percentage`| Разница между долей речи в позитивных репликах среди речи в эмоциональных репликах в начале диалога и по всему каналу клиента (`conv_start_emotion_pos_speech_time_percentage` - `emotion_pos_speech_time_percentage`)| Проценты — от 0 до 1 |
+| `customer_conv_start_delta_emotion_neg_utt_percentage`| Разница между долей негативных реплик среди всех эмоциональных реплик в начале диалога и по всему каналу клиента (`conv_start_emotion_neg_utt_percentage` - `emotion_neg_utt_percentage`)| Проценты — от 0 до 1 |
+| `customer_conv_start_delta_emotion_neu_utt_percentage`| Разница между долей нейтральных реплик среди всех эмоциональных реплик в начале диалога и по всему каналу клиента (`conv_start_emotion_neu_utt_percentage` - `emotion_neu_utt_percentage`)| Проценты — от 0 до 1 |
+| `customer_conv_start_delta_emotion_pos_utt_percentage`| Разница между долей позитивных реплик среди всех эмоциональных реплик в начале диалога и по всему каналу клиента (`conv_start_emotion_pos_utt_percentage` - `emotion_pos_utt_percentage`)| Проценты — от 0 до 1 |
+| `customer_speech_end_frame`| Последний фрейм речи в канале клиента| Фрейм|
+| `customer_conv_end_first_frame`| Первый фрейм конца диалога в канале клиента| Фрейм|
+| `customer_conv_end_first_sec`| Время начала конца диалога в канале клиента (`conv_end_first_frame` / `sample_rate`)| Секунды|
+| `customer_conv_end_emotion_utt_count`| Количество реплик в конце диалога в канале клиента| Штуки|
+| `customer_conv_end_emotion_utt_length_sum`| Суммарная длительность реплик в конце диалога в канале клиента| Секунды|
+| `customer_conv_end_emotion_speech_length_sum`| Суммарная длительность конца диалога в канале клиента| Секунды|
+| `customer_conv_end_emotion_n_words_sum`| Суммарное количество распознанных слов в конце диалога в канале клиента| Штуки|
+| `customer_conv_end_emotion_neg_utt_count`| Количество реплик с предсказанной негативной эмоцией в конце диалога в канале клиента| Штуки|
+| `customer_conv_end_emotion_neg_utt_percentage`| Доля негативных реплик среди всех эмоциональных реплик в конце диалога в канале клиента| Проценты — от 0 до 1 |
+| `customer_conv_end_emotion_neg_speech_time`| Суммарная длительность речи в негативных репликах в конце диалога в канале клиента| Секунды|
+| `customer_conv_end_emotion_neg_speech_time_percentage`| Доля речи в негативных репликах среди речи в эмоциональных репликах в конце диалога в канале клиента (`conv_end_emotion_neg_speech_time` / `conv_end_emotion_utt_length_sum`)| Проценты — от 0 до 1 |
+| `customer_conv_end_emotion_neg_speech_time_weighted_by_confidence`| Длительность речи в негативных репликах в конце диалога, взвешенная по вероятности негатива, в канале клиента (сумма данных по негативным репликам в конце диалога: длительность речи в реплике * вероятность негатива)| Секунды|
+| `customer_conv_end_emotion_neu_utt_count`| Количество реплик с предсказанной нейтральной эмоцией в конце диалога в канале клиента| Штуки|
+| `customer_conv_end_emotion_neu_utt_percentage`| Доля нейтральных реплик среди всех эмоциональных реплик в конце диалога в канале клиента| Проценты — от 0 до 1 |
+| `customer_conv_end_emotion_neu_speech_time`| Суммарная длительность речи в нейтральных репликах в конце диалога в канале клиента| Секунды|
+| `customer_conv_end_emotion_neu_speech_time_percentage`| Доля речи в нейтральных репликах среди речи в эмоциональных репликах в конце диалога в канале клиента (`conv_end_emotion_neu_speech_time` / `conv_end_emotion_utt_length_sum`)| Проценты — от 0 до 1 |
+| `customer_conv_end_emotion_neu_speech_time_weighted_by_confidence`|Длительность речи в нейтральных репликах в конце диалога, взвешенная по вероятности нейтрали, в канале клиента (сумма данных по нейтральным репликам в конце диалога: длительность речи в реплике * вероятность нейтрали)|Секунды |
+| `customer_conv_end_emotion_pos_utt_count`| Количество реплик с предсказанной позитивной эмоцией в конце диалога в канале клиента| Штуки|
+| `customer_conv_end_emotion_pos_utt_percentage`| Доля позитивных реплик среди всех эмоциональных реплик в конце диалога в канале клиента| Проценты — от 0 до 1 |
+| `customer_conv_end_emotion_pos_speech_time`| Суммарная длительность речи в позитивных репликах в конце диалога в канале клиента| Секунды|
+| `customer_conv_end_emotion_pos_speech_time_percentage`| Доля речи в позитивных репликах среди речи в эмоциональных репликах в конце диалога в канале клиента (`conv_end_emotion_pos_speech_time` / `conv_end_emotion_utt_length_sum`)| Проценты — от 0 до 1 |
+| `customer_conv_end_emotion_pos_speech_time_weighted_by_confidence`| Длительность речи в позитивных репликах в конце диалога, взвешенная по вероятности позитива, в канале клиента (сумма данных по позитивным репликам в конце диалога: длительность речи в реплике * вероятность позитива)|Секунды |
+| `customer_conv_end_emotion_mean`| Средняя предсказанная эмоция по всем эмоциональным репликам в конце диалога в канале клиента| Число от -1 до 1, где:<br />• –1 — все реплики негативные;<br />• 1 — все реплики позитивные|
+| `customer_conv_end_emo_score_mean`| Средний `emo_score` по всем эмоциональным репликам в конце диалога в канале клиента| Число от -1 до 1, где:<br />• –1 — 100% негатив;<br />• 1 — 100% позитив |
+| `customer_conv_end_emo_neg_mean`| Средняя предсказанная вероятность негатива по всем эмоциональным репликам в конце диалога в канале клиента| Проценты — от 0 до 1 |
+| `customer_conv_end_emo_neu_mean`| Средняя предсказанная вероятность нейтральной эмоции по всем эмоциональным репликам в конце диалога в канале клиента| Проценты — от 0 до 1 |
+| `customer_conv_end_emo_pos_mean`| Средняя предсказанная вероятность позитива по всем эмоциональным репликам в конце диалога в канале клиента| Проценты — от 0 до 1 |
+| `customer_conv_end_emotion_weighted_by_speech_length_mean`| Средняя предсказанная эмоция, взвешенная по длительности речи в репликах, в конце диалога в канале клиента*|Варианты:<br />• –1 — негативная;<br />• 0 — нейтральная;<br />• 1 — позитивная|
+| `customer_conv_end_emo_score_weighted_by_speech_length_mean`| Средний `emo_score`, взвешенный по длительности речи в репликах, в конце диалога в канале клиента*| Варианты:<br />• –1 — негативная;<br />• 0 — нейтральная;<br />• 1 — позитивная |
+| `customer_conv_end_emotion_weighted_by_n_words_mean`| Средняя вероятность эмоции, взвешенная по количеству слов в репликах, в конце диалога в канале клиента*|Число от -1 до 1, где:<br />• –1 — 100% негатив;<br />• 1 — 100% позитив|
+| `customer_conv_end_emo_score_weighted_by_n_words_mean`| Средний `emo_score`, взвешенный по количеству слов в репликах, в конце диалога в канале клиента*| Число от -1 до 1, где:<br />• –1 — 100% негатив;<br />• 1 — 100% позитив|
+| `customer_conv_end_emotion_neg_utt_count_of_total_call_percentage`| Соотношение количества реплик с предсказанной негативной эмоцией в конце диалога и по всему каналу клиента (`conv_end_emotion_neg_utt_count` / `emotion_neg_utt_count`)| Проценты — от 0 до 1 |
+| `customer_conv_end_emotion_neu_utt_count_of_total_call_percentage`| Соотношение количества реплик с предсказанной нейтральной эмоцией в конце диалога и по всему каналу клиента (`conv_end_emotion_neu_utt_count` / `emotion_neu_utt_count`)| Проценты — от 0 до 1 |
+| `customer_conv_end_emotion_pos_utt_count_of_total_call_percentage`| Соотношение количества реплик с предсказанной позитивной эмоцией в конце диалога и по всему каналу клиента (`conv_end_emotion_pos_utt_count` / `emotion_pos_utt_count`)| Проценты — от 0 до 1 |
+| `customer_conv_end_emotion_neg_speech_time_of_total_call_percentage`| Соотношение длительности речи в негативных репликах в конце диалога и по всему каналу клиента (`conv_end_emotion_neg_speech_time` / `emotion_pos_speech_time`)| Проценты — от 0 до 1 |
+| `customer_conv_end_emotion_neu_speech_time_of_total_call_percentage`| Соотношение длительности речи в нейтральных репликах в конце диалога и по всему каналу клиента (`conv_end_emotion_neo_speech_time` / `emotion_pos_speech_time`)| Проценты — от 0 до 1 |
+| `customer_conv_end_emotion_pos_speech_time_of_total_call_percentage`| Соотношение длительности речи в позитивных репликах в конце диалога и по всему каналу клиента (`conv_end_emotion_pos_speech_time` / `emotion_pos_speech_time`)| Проценты — от 0 до 1 |
+| `customer_conv_end_emotion_neg_speech_time_weighted_by_confidence_of_total_call_percentage`| Соотношение длительности речи в негативных репликах, взвешенная по вероятности негатива, в конце диалога и по всему каналу клиента (`conv_end_emotion_neg_speech_time_weighted_by_confidence` / `emotion_neg_speech_time_weighted_by_confidence`)| Проценты — от 0 до 1 |
+| `customer_conv_end_emotion_neu_speech_time_weighted_by_confidence_of_total_call_percentage`| Соотношение длительности речи в нейтральных репликах, взвешенная по вероятности нейтрали, в конце диалога и по всему каналу клиента (`conv_end_emotion_neu_speech_time_weighted_by_confidence` / `emotion_neu_speech_time_weighted_by_confidence`)| Проценты — от 0 до 1 |
+| `customer_conv_end_emotion_pos_speech_time_weighted_by_confidence_of_total_call_percentage`| Соотношение длительности речи в позитивных репликах, взвешенная по вероятности позитива, в конце диалога и по всему каналу клиента (`conv_end_emotion_pos_speech_time_weighted_by_confidence` / `emotion_pos_speech_time_weighted_by_confidence`)| Проценты — от 0 до 1 |
+| `customer_conv_end_emotion_utt_count_of_total_call_percentage`| Соотношение количества реплик в конце диалога и по всему каналу клиента (conv_end_emotion_utt_count / emotion_utt_count)| Проценты — от 0 до 1 |
+| `customer_conv_end_emotion_speech_length_sum_of_total_call_percentage`| Соотношение суммарной длительности речи в конце диалога и по всему каналу клиента (conv_end_emotion_speech_length_sum/ emotion_speech_length_sum)| Проценты — от 0 до 1 |
+| `customer_conv_end_emotion_utt_length_sum_of_total_call_percentage`| Соотношение суммарной длительности реплик в конце диалога и по всему каналу клиента (conv_end_emotion_utt_length_sum/ emotion_utt_length_sum)| Проценты — от 0 до 1 |
+| `customer_conv_end_delta_emo_score_mean`| Разница между средним `emo_score` по всем эмоциональным репликам в конце диалога и по всему каналу клиента (`conv_end_emo_score_mean` - `emo_score_mean`)|Число от -2 до 2, где:<br />• –2 — 100% негатив;<br />• 2 — 100% позитив |
+| `customer_conv_end_delta_emotion_mean`| Разница между средней предсказанной эмоцией по всем эмоциональным репликам в конце диалога и по всему каналу клиента (`conv_end_emotion_mean` - `emotion_mean`)| Число от -2 до 2, где:<br />• –2 — 100% негатив;<br />• 2 — 100% позитив |
+| `customer_conv_end_delta_emotion_weighted_by_speech_length_mean`| Разница между средней предсказанной эмоцией, взвешенной по длительности речи в репликах, в конце диалога и по всему каналу клиента* (`conv_end_emotion_weighted_by_speech_length_mean` - `emotion_weighted_by_speech_length_mean`)|Число от -2 до 2, где:<br />• –2 — 100% негатив;<br />• 2 — 100% позитив|
+| `customer_conv_end_delta_emo_score_weighted_by_speech_length_mean`| Разница между средним `emo_score`, взвешенным по длительности речи в репликах, в конце диалога и по всему каналу клиента* (`conv_end_emo_score_weighted_by_speech_length_mean` - `emo_score_weighted_by_speech_length_mean`)|Число от -2 до 2, где:<br />• –2 — 100% негатив;<br />• 2 — 100% позитив|
+| `customer_conv_end_delta_emotion_weighted_by_n_words_mean`| Разница между средней предсказанной эмоцией, взвешенной по количеству слов в репликах, в конце диалога и по всему каналу клиента* (`conv_end_emotion_weighted_by_n_words_mean` - `emotion_weighted_by_n_words_mean`)| Число от -2 до 2, где:<br />• –2 — 100% негатив;<br />• 2 — 100% позитив|
+| `customer_conv_end_delta_emo_score_weighted_by_n_words_mean`| Разница между средним `emo_score`, взвешенным по количеству слов в репликах, в конце диалога и по всему каналу клиента* (`conv_end_emo_score_weighted_by_n_words_mean` - `emo_score_weighted_by_n_words_mean`)| Число от -2 до 2, где:<br />• –2 — 100% негатив;<br />• 2 — 100% позитив|
+| `customer_conv_end_delta_emotion_neg_speech_time_percentage`| Разница между долей речи в негативных репликах среди речи в эмоциональных репликах в конце диалога и по всему каналу клиента (`conv_end_emotion_neg_speech_time_percentage` - `emotion_neg_speech_time_percentage`)| Проценты — от 0 до 1 |
+| `customer_conv_end_delta_emotion_neu_speech_time_percentage`| Разница между долей речи в нейтральных репликах среди речи в эмоциональных репликах в конце диалога и по всему каналу клиента (`conv_end_emotion_neu_speech_time_percentage` - `emotion_neu_speech_time_percentage`)| Проценты — от 0 до 1 |
+| `customer_conv_end_delta_emotion_pos_speech_time_percentage`| Разница между долей речи в позитивных репликах среди речи в эмоциональных репликах в конце диалога и по всему каналу клиента (`conv_end_emotion_pos_speech_time_percentage` - `emotion_pos_speech_time_percentage`)| Проценты — от 0 до 1 |
+| `customer_conv_end_delta_emotion_neg_utt_percentage`| Разница между долей негативных реплик среди всех эмоциональных реплик в конце диалога и по всему каналу клиента (`conv_end_emotion_neg_utt_percentage` - `emotion_neg_utt_percentage`)| Проценты — от 0 до 1 |
+| `customer_conv_end_delta_emotion_neu_utt_percentage`| Разница между долей нейтральных реплик среди всех эмоциональных реплик в конце диалога и по всему каналу клиента (`conv_end_emotion_neu_utt_percentage` - `emotion_neu_utt_percentage`)| Проценты — от 0 до 1 |
+| `customer_conv_end_delta_emotion_pos_utt_percentage`| Разница между долей позитивных реплик среди всех эмоциональных реплик в конце диалога и по всему каналу клиента (`conv_end_emotion_pos_utt_percentage` - `emotion_pos_utt_percentage`)| Проценты — от 0 до 1 |
+| `customer_long_speech_utt_count`| Количество длинных реплик в канале клиента| Штуки|
+| `customer_long_speech_utt_length_sum`| Суммарная длительность длинных реплик в канале клиента| Секунды|
+| `customer_long_speech_length_sum`| Суммарная длительность речи в длинных репликах в канале клиента| Секунды|
+| `customer_long_speech_n_words_sum`| Суммарное количество распознанных слов в длинных репликах в канале клиента| Штуки|
+| `customer_long_speech_speech_speed_letters_mean`| Средняя по репликам скорость речи в длинных репликах — количество букв в секунду в канале клиента| Букв/сек|
+| `customer_long_speech_speech_speed_letters_std`| Среднеквадратическое отклонение скорости речи по репликам в длинных репликах — количество букв в секунду в канале клиента| Букв/сек|
+| `customer_long_speech_speech_speed_words_mean`| Средняя по репликам скорость речи в длинных репликах — количество слов в секунду в канале клиента| Слов/сек|
+| `customer_long_speech_speech_speed_words_std`| Среднеквадратическое отклонение скорости речи по длинным репликам — количество слов в секунду в канале клиента  | Слов/сек|
+
+### Статистики для канала оператора
+
+|**Идентификатор показателя**|**Описание показателя**|**Единица измерения**|
+|----|-----|-----|
+| `agent_utt_count`| Количество реплик в канале оператора| Штуки|
+| `agent_utt_length_sum`| Суммарная длительность реплик в канале оператора| Секунды|
+| `agent_speech_length_sum`| Суммарная длительность речи в канале оператора| Секунды|
+| `agent_n_words_sum`| Суммарное количество распознанных слов в канале оператора| Штуки|
+| `agent_emotion_utt_count`| Количество реплик в канале оператора| Штуки|
+| `agent_emotion_utt_length_sum`| Суммарная длительность реплик в канале оператора| Секунды|
+| `agent_emotion_speech_length_sum`| Суммарная длительность речи в канале оператора| Секунды|
+| `agent_emotion_n_words_sum`| Суммарное количество распознанных слов в канале оператора| Штуки|
+| `agent_n_words_mean`| Среднее количество слов в репликах в канале оператора| Штуки|
+| `agent_utt_length_mean`| Средняя длительность реплик в канале оператора| Секунды|
+| `agent_speech_length_mean`| Средняя длительность речи реплик в канале оператора| Секунды|
+| `agent_letters_in_word_mean`| Среднее количество букв в слове по всему каналу оператора| Штуки|
+| `agent_speech_speed_letters_mean`| Средняя по репликам скорость речи — количество букв в секунду в канале оператора| Букв/сек|
+| `agent_speech_speed_letters_std`| Среднеквадратическое отклонение скорости речи по репликам — количество букв в секунду в канале оператора| Букв/сек|
+| `agent_speech_speed_words_mean`| Средняя по репликам скорость речи — количество слов в секунду в канале оператора| Слов/сек|
+| `agent_speech_speed_words_std`| Среднеквадратическое отклонение скорости речи по репликам — количество слов в секунду в канале оператора| Слов/сек|
+| `agent_speech_speed_letters_all_call_mean`| Средняя скорость по всему каналу оператора (сумма букв во всех репликах / суммарная длительность речи (`speech_length_sum`))| Букв/сек|
+| `agent_speech_speed_words_all_call_mean`| Средняя скорость по всему каналу оператора (`n_words_sum` / `speech_length_sum`)| Слов/сек |
+| `agent_speech_length_percentage`| Доля речи в канале оператора (`speech_length_sum` / `call_duration`)| Проценты — от 0 до 1|
+| `agent_emotion_neg_utt_count`| Количество реплик с предсказанной негативной эмоцией в канале оператора| Штуки|
+| `agent_emotion_neg_utt_percentage`| Доля негативных реплик среди всех эмоциональных репликах в канале оператора| Проценты — от 0 до 1 |
+| `agent_emotion_neg_speech_time`| Суммарная длительность речи в негативных репликах в канале оператора| Секунды|
+| `agent_emotion_neg_speech_time_percentage`| Доля речи в негативных репликах среди речи в эмоциональных репликах в канале оператора (`emotion_neg_speech_time` / `emotion_utt_length_sum`)| Проценты — от 0 до 1|
+| `agent_emotion_neg_speech_time_weighted_by_confidence`| Длительность речи в негативных репликах, взвешенная по вероятности негатива в канале оператора (сумма данных по всем негативным репликам: длительность речи в реплике * вероятность негатива)| Секунды|
+| `agent_emotion_neu_utt_count`| Количество реплик с предсказанной нейтральной эмоцией в канале оператора| Штуки|
+| `agent_emotion_neu_utt_percentage`| Доля нейтральных реплик среди всех эмоциональных реплик в канале оператора| Проценты — от 0 до 1 |
+| `agent_emotion_neu_speech_time`| Суммарная длительность речи в нейтральных репликах в канале оператора| Секунды|
+| `agent_emotion_neu_speech_time_percentage`| Доля речи в нейтральных репликах среди речи в эмоциональных репликах в канале оператора (`emotion_neu_speech_time` / `emotion_utt_length_sum`)| Проценты — от 0 до 1 |
+| `agent_emotion_neu_speech_time_weighted_by_confidence`| Длительность речи в нейтральных репликах, взвешенная по вероятности нейтрали в канале оператора (сумма данных по всем нейтральным репликам: длительность речи в реплике * вероятность нейтрали)| Секунды|
+| `agent_emotion_pos_utt_count`| Количество реплик с предсказанной позитивной эмоцией в канале оператора| Штуки|
+| `agent_emotion_pos_utt_percentage`| Доля позитивных реплик среди всех эмоциональных реплик в канале оператора| Проценты — от 0 до 1 |
+| `agent_emotion_pos_speech_time`| Суммарная длительность речи в позитивных репликах в канале оператора| Секунды|
+| `agent_emotion_pos_speech_time_percentage`| Доля речи в позитивных репликах среди речи в эмоциональных репликах в канале оператора (`emotion_pos_speech_time` / `emotion_utt_length_sum`)| Проценты — от 0 до 1|
+| `agent_emotion_pos_speech_time_weighted_by_confidence`| Длительность речи в позитивных репликах, взвешенная по вероятности позитива в канале оператора (сумма данных по всем позитивным репликам: длительность речи в реплике * вероятность позитива)|Секунды|
+| `agent_emotion_mean`| Средняя предсказанная эмоция по всем эмоциональным репликам в канале оператора|Число от -1 до 1, где:<br />• –1 — все реплики негативные;<br />• 1 — все реплики позитивные|
+| `agent_emo_score_mean`| Средний `emo_score` по всем эмоциональным репликам в канале оператора|Число от -1 до 1, где:<br />• –1 — 100% негатив;<br />• 1 — 100% позитив |
+| `agent_emo_neg_mean`| Средняя предсказанная вероятность негатива по всем эмоциональным репликам в канале оператора| Проценты — от 0 до 1 |
+| `agent_emo_neu_mean`| Средняя предсказанная вероятность нейтральной эмоции по всем эмоциональным репликам в канале оператора| Проценты — от 0 до 1 |
+| `agent_emo_pos_mean`| Средняя предсказанная вероятность позитива по всем эмоциональным репликам в канале оператора| Проценты — от 0 до 1 |
+| `agent_emotion_weighted_by_speech_length_mean`| Средняя предсказанная эмоция, взвешенная по длительности речи в репликах, в канале оператора*|Варианты:<br />• –1 — негативная;<br />• 0 — нейтральная;<br />• 1 — позитивная |
+| `agent_emo_score_weighted_by_speech_length_mean`| Средний `emo_score`, взвешенный по количеству слов в репликах, в канале оператора*| Варианты:<br />• –1 — негативная;<br />• 0 — нейтральная;<br />• 1 — позитивная |
+| `agent_emotion_weighted_by_n_words_mean`| Средняя вероятность эмоции, взвешенная по длительности речи в репликах, в канале оператора*|Число от -1 до 1, где:<br />• –1 — 100% негатив;<br />• 1 — 100% позитив |
+| `agent_emo_score_weighted_by_n_words_mean`| Средний `emo_score`, взвешенный по количеству слов в репликах, в канале оператора*|Число от -1 до 1, где:<br />• –1 — 100% негатив;<br />• 1 — 100% позитив|
+| `agent_speech_start_frame`| Фрейм начала речи в канале оператора. Фрейм — 1/8000 секунды| Фрейм|
+| `agent_conv_start_last_frame`| Последний фрейм начала диалога в канале оператора| Фрейм|
+| `agent_conv_start_last_sec`| Время окончания начала диалога в канале оператора (`conv_start_conv_start_last_frame` / `sample_rate`)| Секунды |
+| `agent_conv_start_emotion_utt_count`| Количество реплик в начале диалога в канале оператора| Штуки|
+| `agent_conv_start_emotion_utt_length_sum`| Суммарная длительность реплик в начале диалога в канале оператора| Секунды|
+| `agent_conv_start_emotion_speech_length_sum`| Суммарная длительность начала диалога в канале оператора| Секунды|
+| `agent_conv_start_emotion_n_words_sum`| Суммарное количество распознанных слов в начале диалога в канале оператора| Штуки|
+| `agent_conv_start_emotion_neg_utt_count`| Количество реплик с предсказанной негативной эмоцией в начале диалога в канале оператора| Штуки|
+| `agent_conv_start_emotion_neg_utt_percentage`| Доля негативных реплик среди всех эмоциональных реплик в начале диалога в канале оператора| Проценты — от 0 до 1 |
+| `agent_conv_start_emotion_neg_speech_time`| Суммарная длительность речи в негативных репликах в начале диалога в канале оператора| Секунды|
+| `agent_conv_start_emotion_neg_speech_time_percentage`| Доля речи в негативных репликах среди речи в эмоциональных репликах в начале диалога в канале оператора(`conv_start_emotion_neg_speech_time` / `conv_start_emotion_utt_length_sum`)| Проценты — от 0 до 1 |
+| `agent_conv_start_emotion_neg_speech_time_weighted_by_confidence`|Длительность речи в негативных репликах в начале диалога, взвешенная по вероятности негатива, в канале оператора (сумма данных по негативным репликам в начале диалога: длительность речи в реплике * вероятность негатива)|  Секунды|
+| `agent_conv_start_emotion_neu_utt_count`| Количество реплик с предсказанной нейтральной эмоцией в начале диалога в канале оператора| Штуки|
+| `agent_conv_start_emotion_neu_utt_percentage`| Доля нейтральных реплик среди всех эмоциональных реплик в начале диалога в канале оператора| Проценты — от 0 до 1 |
+| `agent_conv_start_emotion_neu_speech_time`| Суммарная длительность речи в нейтральных репликах в начале диалога в канале оператора| Секунды|
+| `agent_conv_start_emotion_neu_speech_time_percentage`| Доля речи в нейтральных репликах среди речи в эмоциональных репликах в начале диалога в канале оператора (`conv_start_emotion_neu_speech_time` / `conv_start_emotion_utt_length_sum`)| Проценты — от 0 до 1 |
+| `agent_conv_start_emotion_neu_speech_time_weighted_by_confidence`|Длительность речи в нейтральных репликах в начале диалога, взвешенная по вероятности нейтрали, в канале оператора (сумма данных по нейтральным репликам в начале диалога: длительность речи в реплике * вероятность нейтрали)| Секунды |
+| `agent_conv_start_emotion_pos_utt_count`| Количество реплик с предсказанной позитивной эмоцией в начале диалога в канале оператора| Штуки|
+| `agent_conv_start_emotion_pos_utt_percentage`| Доля позитивных реплик среди всех эмоциональных реплик в начале диалога в канале оператора| Проценты — от 0 до 1 |
+| `agent_conv_start_emotion_pos_speech_time`| Суммарная длительность речи в позитивных репликах в начале диалога в канале оператора| Секунды|
+| `agent_conv_start_emotion_pos_speech_time_percentage`| Доля речи в позитивных репликах среди речи в эмоциональных репликах в начале диалога в канале оператора (`conv_start_emotion_pos_speech_time` / `conv_start_emotion_utt_length_sum`)| Проценты — от 0 до 1 |
+| `agent_conv_start_emotion_pos_speech_time_weighted_by_confidence`|Длительность речи в позитивных репликах в начале диалога, взвешенная по вероятности позитива, в канале оператора (сумма данных по позитивным репликам в начале диалога: длительность речи в реплике * вероятность позитива)| Секунды|
+| `agent_conv_start_emotion_mean`| Средняя предсказанная эмоция по всем эмоциональным репликам в начале диалога в канале оператора| Число от -1 до 1, где:<br />• –1 — все реплики негативные;<br />• 1 — все реплики позитивные |
+| `agent_conv_start_emo_score_mean`| Средний `emo_score` по всем эмоциональным репликам в начале диалога в канале оператора| Число от -1 до 1, где:<br />• –1 — 100% негатив;<br />• 1 — 100% позитив |
+| `agent_conv_start_emo_neg_mean`| Средняя предсказанная вероятность негатива по всем эмоциональным репликам в начале диалога в канале оператора| Проценты — от 0 до 1 |
+| `agent_conv_start_emo_neu_mean`| Средняя предсказанная вероятность нейтральной эмоции по всем эмоциональным репликам в начале диалога в канале оператора| Проценты — от 0 до 1 |
+| `agent_conv_start_emo_pos_mean`| Средняя предсказанная вероятность позитива по всем эмоциональным репликам в начале диалога в канале оператора| Проценты — от 0 до 1 |
+| `agent_conv_start_emotion_weighted_by_speech_length_mean`| Средняя предсказанная эмоция, взвешенная по длительности речи в репликах, в начале диалога в канале оператора*|Варианты:<br />• –1 — негативная;<br />• 0 — нейтральная;<br />• 1 — позитивная |
+| `agent_conv_start_emo_score_weighted_by_speech_length_mean`| Средний `emo_score`, взвешенный по длительности речи в репликах, в начале диалога в канале оператора*|Варианты:<br />• –1 — негативная;<br />• 0 — нейтральная;<br />• 1 — позитивная |
+| `agent_conv_start_emotion_weighted_by_n_words_mean`| Средняя вероятность эмоции, взвешенная по количеству слов в репликах, в начале диалога в канале оператора*|Число от -1 до 1, где: <br />• –1 — 100% негатив;<br />• 1 — 100% позитив |
+| `agent_conv_start_emo_score_weighted_by_n_words_mean`| Средний  `emo_score`, взвешенный по количеству слов в репликах, в начале диалога в канале оператора*| Число от -1 до 1, где:<br />• –1 — 100% негатив;<br />• 1 — 100% позитив|
+| `agent_conv_start_emotion_neg_utt_count_of_total_call_percentage`| Соотношение количества реплик с предсказанной негативной эмоцией в начале диалога и по всему каналу оператора (`conv_start_emotion_neg_utt_count` / `emotion_neg_utt_count`)| Проценты — от 0 до 1 |
+| `agent_conv_start_emotion_neu_utt_count_of_total_call_percentage`| Соотношение количества реплик с предсказанной нейтральной эмоцией в начале диалога и по всему каналу оператора (`conv_start_emotion_neu_utt_count` / `emotion_neu_utt_count`)| Проценты — от 0 до 1 |
+| `agent_conv_start_emotion_pos_utt_count_of_total_call_percentage`| Соотношение количества реплик с предсказанной позитивной эмоцией в начале диалога и по всему каналу оператора (`conv_start_emotion_pos_utt_count` / `emotion_pos_utt_count`)| Проценты — от 0 до 1 |
+| `agent_conv_start_emotion_neg_speech_time_of_total_call_percentage`| Соотношение длительности речи в негативных репликах в начале диалога и по всему каналу оператора (`conv_start_emotion_neg_speech_time` / `emotion_pos_speech_time`)| Проценты — от 0 до 1 |
+| `agent_conv_start_emotion_neu_speech_time_of_total_call_percentage`| Соотношение длительности речи в нейтральных репликах в начале диалога и по всему каналу оператора (`conv_start_emotion_neo_speech_time` / `emotion_pos_speech_time`)| Проценты — от 0 до 1 |
+| `agent_conv_start_emotion_pos_speech_time_of_total_call_percentage`| Соотношение длительности речи в позитивных репликах в начале диалога и по всему каналу оператора (`conv_start_emotion_pos_speech_time` / `emotion_pos_speech_time`)| Проценты — от 0 до 1 |
+| `agent_conv_start_emotion_neg_speech_time_weighted_by_confidence_of_total_call_percentage`| Соотношение длительности речи в негативных репликах, взвешенная по вероятности негатива, в начале диалога и по всему каналу оператора (`conv_start_emotion_neg_speech_time_weighted_by_confidence` / `emotion_neg_speech_time_weighted_by_confidence`)| Проценты — от 0 до 1 |
+| `agent_conv_start_emotion_neu_speech_time_weighted_by_confidence_of_total_call_percentage`| Соотношение длительности речи в нейтральных репликах, взвешенная по вероятности нейтрали, в начале диалога и по всему каналу оператора (`conv_start_emotion_neu_speech_time_weighted_by_confidence` / `emotion_neu_speech_time_weighted_by_confidence`)| Проценты — от 0 до 1 |
+| `agent_conv_start_emotion_pos_speech_time_weighted_by_confidence_of_total_call_percentage`| Соотношение длительности речи в позитивных репликах, взвешенная по вероятности позитива, в начале диалога и по всему каналу оператора (`conv_start_emotion_pos_speech_time_weighted_by_confidence` / `emotion_pos_speech_time_weighted_by_confidence`)| Проценты — от 0 до 1 |
+| `agent_conv_start_emotion_utt_count_of_total_call_percentage`| Соотношение количества реплик в начале диалога и по всему каналу оператора (`conv_start_emotion_utt_count` / `emotion_utt_count`)| Проценты — от 0 до 1 |
+| `agent_conv_start_emotion_speech_length_sum_of_total_call_percentage`| Соотношение суммарной длительности речи в начале диалога и по всему каналу оператора (`conv_start_emotion_speech_length_sum`/ `emotion_speech_length_sum`)| Проценты — от 0 до 1 |
+| `agent_conv_start_emotion_utt_length_sum_of_total_call_percentage`| Соотношение суммарной длительности реплик в начале диалога и по всему каналу оператора (`conv_start_emotion_utt_length_sum`/ `emotion_utt_length_sum`)| Проценты — от 0 до 1 |
+| `agent_conv_start_delta_emo_score_mean`| Разница между средним `emo_score` по всем эмоциональным репликам в начале диалога и по всему каналу оператора (`conv_start_emo_score_mean` - `emo_score_mean`)| Число от -2 до 2, где:<br />• –2 — 100% негатив;<br />• 2 — 100% позитив|
+| `agent_conv_start_delta_emotion_mean`| Разница между средней предсказанной эмоцией по всем эмоциональным репликам в начале диалога и по всему каналу оператора (`conv_start_emotion_mean` - `emotion_mean`)|Число от -2 до 2, где:<br />• –2 — 100% негатив;<br />• 2 — 100% позитив|
+| `agent_conv_start_delta_emotion_weighted_by_speech_length_mean`| Разница между средней предсказанной эмоцией, взвешенной по длительности речи в репликах, в начале диалога и по всему каналу оператора* (`conv_start_emotion_weighted_by_speech_length_mean` - `emotion_weighted_by_speech_length_mean`)| Число от -2 до 2, где:<br />• –2 — 100% негатив; <br />• 2 — 100% позитив|
+| `agent_conv_start_delta_emo_score_weighted_by_speech_length_mean`| Разница между средним `emo_score`, взвешенным по длительности речи в репликах, в начале диалога и по всему каналу оператора* (`conv_start_emo_score_weighted_by_speech_length_mean` - `emo_score_weighted_by_speech_length_mean`)|Число от -2 до 2, где:<br />• –2 — 100% негатив;<br />• 2 — 100% позитив|
+| `agent_conv_start_delta_emotion_weighted_by_n_words_mean`| Разница между средней предсказанной эмоцией, взвешенной по количеству слов в репликах, в начале диалога и по всему каналу оператора* (`conv_start_emotion_weighted_by_n_words_mean` - `emotion_weighted_by_n_words_mean`)| Число от -2 до 2, где:<br />• –2 — 100% негатив;<br />• 2 — 100% позитив|
+| `agent_conv_start_delta_emo_score_weighted_by_n_words_mean`| Разница между средним `emo_score`, взвешенным по количеству слов в репликах, в начале диалога и по всему каналу оператора* (`conv_start_emo_score_weighted_by_n_words_mean` - `emo_score_weighted_by_n_words_mean`)| Число от -2 до 2, где:<br />• –2 — 100% негатив;<br />• 2 — 100% позитив|
+| `agent_conv_start_delta_emotion_neg_speech_time_percentage`| Разница между долей речи в негативных репликах среди речи в эмоциональных репликах в начале диалога и по всему каналу оператора (`conv_start_emotion_neg_speech_time_percentage` - `emotion_neg_speech_time_percentage`)| Проценты — от 0 до 1 |
+| `agent_conv_start_delta_emotion_neu_speech_time_percentage`| Разница между долей речи в нейтральных репликах среди речи в эмоциональных репликах в начале диалога и по всему каналу оператора (`conv_start_emotion_neu_speech_time_percentage` - `emotion_neu_speech_time_percentage`)| Проценты — от 0 до 1 |
+| `agent_conv_start_delta_emotion_pos_speech_time_percentage`| Разница между долей речи в позитивных репликах среди речи в эмоциональных репликах в начале диалога и по всему каналу оператора (`conv_start_emotion_pos_speech_time_percentage` - `emotion_pos_speech_time_percentage`)| Проценты — от 0 до 1 |
+| `agent_conv_start_delta_emotion_neg_utt_percentage`| Разница между долей негативных реплик среди всех эмоциональных реплик в начале диалога и по всему каналу оператора (`conv_start_emotion_neg_utt_percentage` - `emotion_neg_utt_percentage`)| Проценты — от 0 до 1 |
+| `agent_conv_start_delta_emotion_neu_utt_percentage`| Разница между долей нейтральных реплик среди всех эмоциональных реплик в начале диалога и по всему каналу оператора (`conv_start_emotion_neu_utt_percentage` - `emotion_neu_utt_percentage`)| Проценты — от 0 до 1 |
+| `agent_conv_start_delta_emotion_pos_utt_percentage`| Разница между долей позитивных реплик среди всех эмоциональных реплик в начале диалога и по всему каналу оператора (`conv_start_emotion_pos_utt_percentage` - `emotion_pos_utt_percentage`)| Проценты — от 0 до 1 |
+| `agent_speech_end_frame`| Последний фрейм речи в канале оператора| Фрейм|
+| `agent_conv_end_first_frame`| Первый фрейм конца диалога в канале оператора| Фрейм|
+| `agent_conv_end_first_sec`| Время начала конца диалога в канале оператора (`conv_end_first_frame` / `sample_rate`)| Секунды|
+| `agent_conv_end_emotion_utt_count`| Количество реплик в конце диалога в канале оператора| Штуки|
+| `agent_conv_end_emotion_utt_length_sum`| Суммарная длительность реплик в конце диалога в канале оператора| Секунды|
+| `agent_conv_end_emotion_speech_length_sum`| Суммарная длительность конца диалога в канале оператора| Секунды|
+| `agent_conv_end_emotion_n_words_sum`| Суммарное количество распознанных слов в конце диалога в канале оператора| Штуки|
+| `agent_conv_end_emotion_neg_utt_count`| Количество реплик с предсказанной негативной эмоцией в конце диалога в канале оператора| Штуки|
+| `agent_conv_end_emotion_neg_utt_percentage`| Доля негативных реплик среди всех эмоциональных реплик в конце диалога в канале оператора| Проценты — от 0 до 1 |
+| `agent_conv_end_emotion_neg_speech_time`| Суммарная длительности речи в негативных репликах в конце диалога в канале оператора| Секунды|
+| `agent_conv_end_emotion_neg_speech_time_percentage`| Доля речи в негативных репликах среди речи в эмоциональных репликах в конце диалога в канале оператора (`conv_end_emotion_neg_speech_time` / `conv_end_emotion_utt_length_sum`)| Проценты — от 0 до 1 |
+| `agent_conv_end_emotion_neg_speech_time_weighted_by_confidence`| Длительность речи в негативных репликах в конце диалога, взвешенная по вероятности негатива, в канале оператора (сумма данных по негативным репликам в конце диалога: длительность речи в реплике * вероятность негатива)| Секунды |
+| `agent_conv_end_emotion_neu_utt_count`| Количество реплик с предсказанной нейтральной эмоцией в конце диалога в канале оператора| Штуки|
+| `agent_conv_end_emotion_neu_utt_percentage`| Доля нейтральных реплик среди всех эмоциональных реплик в конце диалога в канале оператора| Проценты — от 0 до 1 |
+| `agent_conv_end_emotion_neu_speech_time`| Суммарная длительность речи в нейтральных репликах в конце диалога в канале оператора| Секунды|
+| `agent_conv_end_emotion_neu_speech_time_percentage`| Доля речи в нейтральных репликах среди речи в эмоциональных репликах в конце диалога в канале оператора (`conv_end_emotion_neu_speech_time` / `conv_end_emotion_utt_length_sum`)| Проценты — от 0 до 1 |
+| `agent_conv_end_emotion_neu_speech_time_weighted_by_confidence`| Длительность речи в нейтральных репликах в конце диалога, взвешенная по вероятности нейтрали, в канале оператора (сумма данных по нейтральным репликам в конце диалога: длительность речи в реплике * вероятность нейтрали)|Секунды|
+| `agent_conv_end_emotion_pos_utt_count`| Количество реплик с предсказанной позитивной эмоцией в конце диалога в канале оператора| Штуки|
+| `agent_conv_end_emotion_pos_utt_percentage`| Доля позитивных реплик среди всех эмоциональных реплик в конце диалога в канале оператора| Проценты — от 0 до 1 |
+| `agent_conv_end_emotion_pos_speech_time`| Суммарная длительность речи в позитивных репликах в конце диалога в канале оператора| Секунды|
+| `agent_conv_end_emotion_pos_speech_time_percentage`| Доля речи в позитивных репликах среди речи в эмоциональных репликах в конце диалога в канале оператора (`conv_end_emotion_pos_speech_time` / `conv_end_emotion_utt_length_sum`)| Проценты — от 0 до 1 |
+| `agent_conv_end_emotion_pos_speech_time_weighted_by_confidence`| Длительность речи в позитивных репликах в конце диалога, взвешенная по вероятности позитива, в канале оператора (сумма данных по позитивным репликам в конце диалога: длительность речи в реплике * вероятность позитива)| Секунды|
+| `agent_conv_end_emotion_mean`| Средняя предсказанная эмоция по всем эмоциональным репликам в конце диалога в канале оператора| Число от -1 до 1, где:<br />• –1 — все реплики негативные;<br />• 1 — все реплики позитивные |
+| `agent_conv_end_emo_score_mean`| Средний `emo_score` по всем эмоциональным репликам в конце диалога в канале оператора| Число от -1 до 1, где:<br />• –1 — 100% негатив;<br />• 1 — 100% позитив|
+| `agent_conv_end_emo_neg_mean`| Средняя предсказанная вероятность негатива по всем эмоциональным репликам в конце диалога в канале оператора| Проценты — от 0 до 1 |
+| `agent_conv_end_emo_neu_mean`| Средняя предсказанная вероятность нейтральной эмоции по всем эмоциональным репликам в конце диалога в канале оператора| Проценты — от 0 до 1 |
+| `agent_conv_end_emo_pos_mean`| Средняя предсказанная вероятность позитива по всем эмоциональным репликам в конце диалога в канале оператора| Проценты — от 0 до 1 |
+| `agent_conv_end_emotion_weighted_by_speech_length_mean`| Средняя предсказанная эмоция, взвешенная по длительности речи в репликах, в конце диалога в канале оператора*| Варианты:<br />• –1 — негативная;<br />• 0 — нейтральная;<br />• 1 — позитивная|
+| `agent_conv_end_emo_score_weighted_by_speech_length_mean`| Средний `emo_score`, взвешенный по длительности речи в репликах, в конце диалога в канале оператора*|Варианты:<br />• –1 — негативная;<br />• 0 — нейтральная;<br />• 1 — позитивная  |
+| `agent_conv_end_emotion_weighted_by_n_words_mean`| Средняя вероятность эмоции, взвешенная по количеству слов в репликах, в конце диалога в канале оператора*|Число от -1 до 1, где:<br />• –1 — 100% негатив;<br />• 1 — 100% позитив|
+| `agent_conv_end_emo_score_weighted_by_n_words_mean`| Средний `emo_score`, взвешенный по количеству слов в репликах, в конце диалога в канале оператора*| Число от -1 до 1, где:<br />• –1 — 100% негатив;<br />• 1 — 100% позитив|
+| `agent_conv_end_emotion_neg_utt_count_of_total_call_percentage`| Соотношение количества реплик с предсказанной негативной эмоцией в конце диалога и по всему каналу оператора (`conv_end_emotion_neg_utt_count` / `emotion_neg_utt_count`)| Проценты — от 0 до 1 |
+| `agent_conv_end_emotion_neu_utt_count_of_total_call_percentage`| Соотношение количества реплик с предсказанной нейтральной эмоцией в конце диалога и по всему каналу оператора (`conv_end_emotion_neu_utt_count` / `emotion_neu_utt_count`)| Проценты — от 0 до 1 |
+| `agent_conv_end_emotion_pos_utt_count_of_total_call_percentage`| Соотношение количества реплик с предсказанной позитивной эмоцией в конце диалога и по всему каналу оператора (`conv_end_emotion_pos_utt_count` / `emotion_pos_utt_count`)| Проценты — от 0 до 1 |
+| `agent_conv_end_emotion_neg_speech_time_of_total_call_percentage`| Соотношение длительности речи в негативных репликах в конце диалога и по всему каналу оператора (`conv_end_emotion_neg_speech_time` / `emotion_pos_speech_time`)| Проценты — от 0 до 1 |
+| `agent_conv_end_emotion_neu_speech_time_of_total_call_percentage`| Соотношение длительности речи в нейтральных репликах в конце диалога и по всему каналу оператора (`conv_end_emotion_neo_speech_time` / `emotion_pos_speech_time`)| Проценты — от 0 до 1 |
+| `agent_conv_end_emotion_pos_speech_time_of_total_call_percentage`| Соотношение длительности речи в позитивных репликах в конце диалога и по всему каналу оператора (`conv_end_emotion_pos_speech_time` / `emotion_pos_speech_time`)| Проценты — от 0 до 1 |
+| `agent_conv_end_emotion_neg_speech_time_weighted_by_confidence_of_total_call_percentage`| Соотношение длительности речи в негативных репликах, взвешенная по вероятности негатива, в конце диалога и по всему каналу оператора (`conv_end_emotion_neg_speech_time_weighted_by_confidence` / `emotion_neg_speech_time_weighted_by_confidence`)| Проценты — от 0 до 1 |
+| `agent_conv_end_emotion_neu_speech_time_weighted_by_confidence_of_total_call_percentage`| Соотношение длительности речи в нейтральных репликах, взвешенная по вероятности нейтрали, в конце диалога и по всему каналу оператора (`conv_end_emotion_neu_speech_time_weighted_by_confidence` / `emotion_neu_speech_time_weighted_by_confidence`)| Проценты — от 0 до 1 |
+| `agent_conv_end_emotion_pos_speech_time_weighted_by_confidence_of_total_call_percentage`| Соотношение длительности речи в позитивных репликах, взвешенная по вероятности позитива, в конце диалога и по всему каналу оператора (`conv_end_emotion_pos_speech_time_weighted_by_confidence` / `emotion_pos_speech_time_weighted_by_confidence`)| Проценты — от 0 до 1 |
+| `agent_conv_end_emotion_utt_count_of_total_call_percentage`| Соотношение количества реплик в конце диалога и по всему каналу оператора (`conv_end_emotion_utt_count` / `emotion_utt_count`)| Проценты — от 0 до 1 |
+| `agent_conv_end_emotion_speech_length_sum_of_total_call_percentage`| Соотношение суммарной длительности речи в конце диалога и по всему каналу оператора (`conv_end_emotion_speech_length_sum` / `emotion_speech_length_sum`)| Проценты — от 0 до 1 |
+| `agent_conv_end_emotion_utt_length_sum_of_total_call_percentage`| Соотношение суммарной длительности реплик в конце диалога и по всему каналу оператора (`conv_end_emotion_utt_length_sum` / `emotion_utt_length_sum`)| Проценты — от 0 до 1 |
+| `agent_conv_end_delta_emo_score_mean`| Разница между средним `emo_score` по всем эмоциональным репликам в конце диалога и по всему каналу оператора (`conv_end_emo_score_mean` – `emo_score_mean`)| Число от -2 до 2, где:<br />• –2 — 100% негатив;<br />• 2 — 100% позитив|
+| `agent_conv_end_delta_emotion_mean`| Разница между средней предсказанной эмоцией по всем эмоциональным репликам в конце диалога и по всему каналу оператора (conv_end_emotion_mean – emotion_mean)| Число от -2 до 2, где:<br />• –2 — 100% негатив; <br />• 2 — 100% позитив|
+| `agent_conv_end_delta_emotion_weighted_by_speech_length_mean`| Разница между средней предсказанной эмоцией, взвешенной по длительности речи в репликах, в конце диалога и по всему каналу оператора* (`conv_end_emotion_weighted_by_speech_length_mean` – `emotion_weighted_by_speech_length_mean`)| Число от -2 до 2, где:<br />• –2 — 100% негатив;<br />• 2 — 100% позитив |
+| `agent_conv_end_delta_emo_score_weighted_by_speech_length_mean`| Разница между средним `emo_score`, взвешенным по длительности речи в репликах, в конце диалога и по всему каналу оператора* (`conv_end_emo_score_weighted_by_speech_length_mean` – `emo_score_weighted_by_speech_length_mean`)| Число от -2 до 2, где:<br />• –2 — 100% негатив;<br />• 2 — 100% позитив|
+| `agent_conv_end_delta_emotion_weighted_by_n_words_mean`| Разница между средней предсказанной эмоцией, взвешенной по количеству слов в репликах, в конце диалога и по всему каналу оператора* (`conv_end_emotion_weighted_by_n_words_mean` – `emotion_weighted_by_n_words_mean`)|Число от -2 до 2, где:<br />• –2 — 100% негатив;<br />• 2 — 100% позитив|
+| `agent_conv_end_delta_emo_score_weighted_by_n_words_mean`| Разница между средним `emo_score`, взвешенным по количеству слов в репликах, в конце диалога и по всему каналу оператора* (`conv_end_emo_score_weighted_by_n_words_mean` – `emo_score_weighted_by_n_words_mean`)| Число от -2 до 2, где:<br />• –2 — 100% негатив;<br />• 2 — 100% позитив|
+| `agent_conv_end_delta_emotion_neg_speech_time_percentage`| Разница между долей речи в негативных репликах среди речи в эмоциональных репликах в конце диалога и по всему каналу оператора (`conv_end_emotion_neg_speech_time_percentage` – `emotion_neg_speech_time_percentage`)| Проценты — от 0 до 1 |
+| `agent_conv_end_delta_emotion_neu_speech_time_percentage`| Разница между долей речи в нейтральных репликах среди речи в эмоциональных репликах в конце диалога и по всему каналу оператора (`conv_end_emotion_neu_speech_time_percentage` – `emotion_neu_speech_time_percentage`)| Проценты — от 0 до 1 |
+| `agent_conv_end_delta_emotion_pos_speech_time_percentage`| Разница между долей речи в позитивных репликах среди речи в эмоциональных репликах в конце диалога и по всему каналу оператора (`conv_end_emotion_pos_speech_time_percentage` – `emotion_pos_speech_time_percentage`)| Проценты — от 0 до 1 |
+| `agent_conv_end_delta_emotion_neg_utt_percentage`| Разница между долей негативных реплик среди всех эмоциональных реплик в конце диалога и по всему каналу оператора (`conv_end_emotion_neg_utt_percentage` – `emotion_neg_utt_percentage`)| Проценты — от 0 до 1 |
+| `agent_conv_end_delta_emotion_neu_utt_percentage`| Разница между долей нейтральных реплик среди всех эмоциональных реплик в конце диалога и по всему каналу оператора (`conv_end_emotion_neu_utt_percentage` – `emotion_neu_utt_percentage`)| Проценты — от 0 до 1 |
+| `agent_conv_end_delta_emotion_pos_utt_percentage`| Разница между долей позитивных реплик среди всех эмоциональных реплик в конце диалога и по всему каналу оператора (`conv_end_emotion_pos_utt_percentage` – `emotion_pos_utt_percentage`)| Проценты — от 0 до 1 |
+| `agent_long_speech_utt_count`| Количество длинных реплик в канале оператора| Штуки|
+| `agent_long_speech_utt_length_sum`| Суммарная длительность длинных реплик в канале оператора| Секунды|
+| `agent_long_speech_length_sum`| Суммарная длительность речи в длинных репликах в канале оператора| Секунды|
+| `agent_long_speech_n_words_sum`| Суммарное количество распознанных слов в длинных репликах в канале оператора| Штуки|
+| `agent_long_speech_speech_speed_letters_mean`| Средняя по репликам скорость речи в длинных репликах — количество букв в секунду в канале оператора| Букв/сек|
+| `agent_long_speech_speech_speed_letters_std`| Среднеквадратическое отклонение скорости речи по репликам в длинных репликах — количество букв в секунду в канале оператора| Букв/сек|
+| `agent_long_speech_speech_speed_words_mean`| Средняя по репликам скорость речи в длинных репликах — количество слов в секунду в канале оператора| Слов/сек|
+| `agent_long_speech_speech_speed_words_std`|  Среднеквадратическое отклонение скорости речи по длинным репликам — количество слов в секунду в канале оператора  | Слов/сек|
